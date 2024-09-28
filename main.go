@@ -102,5 +102,5 @@ func main() {
     http.HandleFunc("/update_airport_image", UpdateAirportImage)
 
     // Start the server
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    log.Fatal(http.ListenAndServe(":9090", nil))
 }
