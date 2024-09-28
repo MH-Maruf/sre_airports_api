@@ -4,6 +4,8 @@ import (
     "encoding/json"
     "net/http"
     "strings"
+    "log"
+    "io"
 
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
@@ -17,23 +19,10 @@ type Airport struct {
     ImageURL string `json:"image_url"`
 }
 
-type AirportV2 struct {
-    Airport
-    RunwayLength int `json:"runway_length"`
-}
-
-// Mock data for airports in Bangladesh
 var airports = []Airport{
     {"Hazrat Shahjalal International Airport", "Dhaka", "DAC", "https://storage.googleapis.com/bd-airport-data/dac.jpg"},
     {"Shah Amanat International Airport", "Chittagong", "CGP", "https://storage.googleapis.com/bd-airport-data/cgp.jpg"},
     {"Osmani International Airport", "Sylhet", "ZYL", "https://storage.googleapis.com/bd-airport-data/zyl.jpg"},
-}
-
-// Mock data for airports in Bangladesh (with runway length for V2)
-var airportsV2 = []AirportV2{
-    {Airport{"Hazrat Shahjalal International Airport", "Dhaka", "DAC", "https://storage.googleapis.com/bd-airport-data/dac.jpg"}, 3200},
-    {Airport{"Shah Amanat International Airport", "Chittagong", "CGP", "https://storage.googleapis.com/bd-airport-data/cgp.jpg"}, 2900},
-    {Airport{"Osmani International Airport", "Sylhet", "ZYL", "https://storage.googleapis.com/bd-airport-data/zyl.jpg"}, 2500},
 }
 
 // HomePage handler
@@ -42,21 +31,14 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte("Status: OK"))
 }
 
-// Airports handler for the first endpoint
+// Airports handler
 func Airports(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(airports)
 }
 
-// AirportsV2 handler for the second version endpoint
-func AirportsV2(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(airportsV2)
-}
-
 // UpdateAirportImage handler for updating airport images
 func UpdateAirportImage(w http.ResponseWriter, r *http.Request) {
-    // Parse the request body to get the airport name and image data
     err := r.ParseMultipartForm(10 << 20) // Limit to 10 MB
     if err != nil {
         http.Error(w, "Unable to parse form", http.StatusBadRequest)
@@ -73,7 +55,7 @@ func UpdateAirportImage(w http.ResponseWriter, r *http.Request) {
 
     // Initialize AWS session
     sess, err := session.NewSession(&aws.Config{
-        Region: aws.String("us-east-1"), // e.g., "us-west-2"
+        Region: aws.String("ap-southeast-1"), // Updated region
     })
     if err != nil {
         http.Error(w, "Unable to create AWS session", http.StatusInternalServerError)
@@ -88,8 +70,8 @@ func UpdateAirportImage(w http.ResponseWriter, r *http.Request) {
 
     // Upload the image to S3
     _, err = svc.PutObject(&s3.PutObjectInput{
-        Bucket:      aws.String("my-iac-bucket-name"), // Replace with your S3 bucket name
- Key:         aws.String(imgPath),
+        Bucket:      aws.String("airport-new"), // Updated bucket name
+        Key:         aws.String(imgPath),
         Body:        file,
         ContentType: aws.String("image/jpeg"),
         ACL:        aws.String("public-read"), // Change as needed
@@ -100,7 +82,7 @@ func UpdateAirportImage(w http.ResponseWriter, r *http.Request) {
     }
 
     // Construct the new image URL
-    newImageURL := "https://your-bucket-name.s3.amazonaws.com/" + imgPath // Update with your bucket name
+    newImageURL := "https://airport-new.s3.ap-southeast-1.amazonaws.com/" + imgPath
     for i, airport := range airports {
         if airport.Name == airportName {
             airports[i].ImageURL = newImageURL
@@ -117,9 +99,8 @@ func main() {
     // Setup routes
     http.HandleFunc("/", HomePage)
     http.HandleFunc("/airports", Airports)
-    http.HandleFunc("/airports_v2", AirportsV2)
     http.HandleFunc("/update_airport_image", UpdateAirportImage)
 
     // Start the server
-    http.ListenAndServe(":8080", nil)
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
