@@ -26,7 +26,7 @@ WORKDIR /app
 COPY --from=build /app/airport-api /app/airport-api
 
 # Expose port 8080 to the outside world
-EXPOSE 90900
+EXPOSE 9090
 
 # Command to run the executable
 CMD ["./airport-api"]
