@@ -22,7 +22,7 @@ RUN go build -x -o airport-api .
 # Use a smaller base image for the runtime environment
 FROM debian:bullseye-slim
 
-# Set the working directory in the runtime container
+# Set the working directory in the runtime container 
 WORKDIR /app
 
 # Copy the pre-built binary from the build stage
