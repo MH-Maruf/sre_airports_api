@@ -25,7 +25,7 @@ WORKDIR /app
 # Copy the Pre-built binary file from the previous stage
 COPY --from=build /app/airport-api /app/airport-api
 
-# Expose port 8080 to the outside world
+# Expose port 9090 to the outside world (ensure this matches your application)
 EXPOSE 9090
 
 # Command to run the executable
