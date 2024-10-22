@@ -10,11 +10,14 @@ COPY go.mod go.sum ./
 # Download the dependencies
 RUN go mod download
 
+# List all installed Go modules for debugging purposes
+RUN go list -m all
+
 # Copy the source code into the container
 COPY . .
 
-# Build the Go app (make sure the main.go file is present in the copied files)
-RUN go build -o airport-api .
+# Build the Go app with verbose logging for debugging
+RUN go build -x -o airport-api .
 
 # Use a smaller base image for the runtime environment
 FROM debian:bullseye-slim
