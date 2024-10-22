@@ -1,35 +1,35 @@
 # Use the official Golang image to build the application
 FROM golang:1.23 AS build
 
-# Set the Current Working Directory inside the container
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum files
+# Copy go.mod and go.sum to the container to download dependencies
 COPY go.mod go.sum ./
 
-# Download all dependencies
+# Download the dependencies
 RUN go mod download
 
 # Copy the source code into the container
 COPY . .
 
-# Build the Go app
+# Build the Go app (make sure the main.go file is present in the copied files)
 RUN go build -o airport-api .
 
-# Start a new stage from scratch with a smaller base image
+# Use a smaller base image for the runtime environment
 FROM debian:bullseye-slim
 
-# Set the Current Working Directory inside the container
+# Set the working directory in the runtime container
 WORKDIR /app
 
-# Copy the Pre-built binary file from the previous stage
+# Copy the pre-built binary from the build stage
 COPY --from=build /app/airport-api /app/airport-api
 
-# Expose port 9090 to the outside world (ensure this matches your application)
+# Expose the port on which the app runs
 EXPOSE 9090
 
-# Health check to ensure application is running properly
+# Health check to ensure the app is running
 HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:9090/ || exit 1
 
-# Command to run the executable
+# Run the Go binary when the container starts
 CMD ["./airport-api"]
